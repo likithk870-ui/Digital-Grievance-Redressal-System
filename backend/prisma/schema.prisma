@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Grievance {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  category      String   // e.g., "Water Issue", "Road Issue", "Electricity Complaint", "Other"
+  area          String   @default("Unspecified")
+  customerPhone String   @default("N/A")
+  customerEmail String?  @default("N/A")
+  priority      String   @default("Medium") // "Low", "Medium", "High", "Urgent"
+  attachmentUrl String?
+  status        String   @default("Pending") // "Pending", "In Progress", "Resolved"
+  rating        Int?     // 1 to 5 stars
+  feedback      String?  // Citizen feedback on resolution
+  commentsJson  String?  @default("[]") // JSON string of progress timeline notes
+  assignedToId  String?
+  assignedTo    Admin?   @relation("AssignedGrievances", fields: [assignedToId], references: [id])
+  resolvedById  String?
+  resolvedBy    Admin?   @relation("ResolvedGrievances", fields: [resolvedById], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model SupportMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  message   String
+  reply     String?
+  repliedAt DateTime?
+  repliedById String?
+  repliedBy   Admin?   @relation("RepliedSupportMessages", fields: [repliedById], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Admin {
+  id        String   @id @default(uuid())
+  name      String   @default("Staff Member")
+  department String  @default("General")
+  area       String  @default("All Zones")
+  workPhone  String  @default("555-0100")
+  email     String   @unique
+  password  String
+  assignedGrievances Grievance[] @relation("AssignedGrievances")
+  resolvedGrievances Grievance[] @relation("ResolvedGrievances")
+  repliedSupportMessages SupportMessage[] @relation("RepliedSupportMessages")
+  createdAt DateTime @default(now())
+}
